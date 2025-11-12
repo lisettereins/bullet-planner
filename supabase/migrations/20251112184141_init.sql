@@ -1,442 +1,549 @@
 
-  create table "public"."categories" (
-    "id" bigint generated always as identity not null,
-    "title" text not null,
-    "created_at" timestamp with time zone default now(),
-    "planner_id" bigint not null
-      );
 
 
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
-  create table "public"."events" (
-    "id" bigint generated always as identity not null,
-    "title" text not null,
-    "datetime" timestamp with time zone not null,
-    "created_at" timestamp with time zone default now(),
-    "category_id" bigint not null
-      );
 
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
 
-  create table "public"."notes" (
-    "id" bigint generated always as identity not null,
-    "title" text not null,
-    "note" text not null,
-    "created_at" timestamp with time zone default now(),
-    "category_id" bigint not null
-      );
 
 
 
-  create table "public"."planners" (
-    "id" bigint generated always as identity not null,
-    "title" text not null,
-    "b_color" text not null,
-    "a_color" text not null,
-    "font" text not null,
-    "created_at" timestamp with time zone default now(),
-    "user_id" bigint not null
-      );
 
+COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
-  create table "public"."tasks" (
-    "id" bigint generated always as identity not null,
-    "title" text not null,
-    "task" text not null,
-    "date" date not null,
-    "created_at" timestamp with time zone default now(),
-    "category_id" bigint not null
-      );
 
+CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 
 
-  create table "public"."users" (
-    "id" bigint generated always as identity not null,
-    "email" text not null,
-    "password" text not null,
-    "created_at" timestamp with time zone default now()
-      );
 
 
-CREATE UNIQUE INDEX categories_pkey ON public.categories USING btree (id);
 
-CREATE UNIQUE INDEX events_pkey ON public.events USING btree (id);
 
-CREATE UNIQUE INDEX notes_pkey ON public.notes USING btree (id);
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
-CREATE UNIQUE INDEX planners_pkey ON public.planners USING btree (id);
 
-CREATE UNIQUE INDEX tasks_pkey ON public.tasks USING btree (id);
 
-CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id);
 
-alter table "public"."categories" add constraint "categories_pkey" PRIMARY KEY using index "categories_pkey";
 
-alter table "public"."events" add constraint "events_pkey" PRIMARY KEY using index "events_pkey";
 
-alter table "public"."notes" add constraint "notes_pkey" PRIMARY KEY using index "notes_pkey";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
 
-alter table "public"."planners" add constraint "planners_pkey" PRIMARY KEY using index "planners_pkey";
 
-alter table "public"."tasks" add constraint "tasks_pkey" PRIMARY KEY using index "tasks_pkey";
 
-alter table "public"."users" add constraint "users_pkey" PRIMARY KEY using index "users_pkey";
 
-alter table "public"."categories" add constraint "categories_planner_id_fkey" FOREIGN KEY (planner_id) REFERENCES public.planners(id) not valid;
 
-alter table "public"."categories" validate constraint "categories_planner_id_fkey";
 
-alter table "public"."events" add constraint "events_category_id_fkey" FOREIGN KEY (category_id) REFERENCES public.categories(id) not valid;
+CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 
-alter table "public"."events" validate constraint "events_category_id_fkey";
 
-alter table "public"."notes" add constraint "notes_category_id_fkey" FOREIGN KEY (category_id) REFERENCES public.categories(id) not valid;
 
-alter table "public"."notes" validate constraint "notes_category_id_fkey";
 
-alter table "public"."planners" add constraint "planners_user_id_fkey" FOREIGN KEY (user_id) REFERENCES public.users(id) not valid;
 
-alter table "public"."planners" validate constraint "planners_user_id_fkey";
 
-alter table "public"."tasks" add constraint "tasks_category_id_fkey" FOREIGN KEY (category_id) REFERENCES public.categories(id) not valid;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
-alter table "public"."tasks" validate constraint "tasks_category_id_fkey";
 
-grant delete on table "public"."categories" to "anon";
 
-grant insert on table "public"."categories" to "anon";
 
-grant references on table "public"."categories" to "anon";
 
-grant select on table "public"."categories" to "anon";
+SET default_tablespace = '';
 
-grant trigger on table "public"."categories" to "anon";
+SET default_table_access_method = "heap";
 
-grant truncate on table "public"."categories" to "anon";
 
-grant update on table "public"."categories" to "anon";
+CREATE TABLE IF NOT EXISTS "public"."categories" (
+    "id" bigint NOT NULL,
+    "title" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "planner_id" bigint NOT NULL
+);
 
-grant delete on table "public"."categories" to "authenticated";
 
-grant insert on table "public"."categories" to "authenticated";
+ALTER TABLE "public"."categories" OWNER TO "supabase_admin";
 
-grant references on table "public"."categories" to "authenticated";
 
-grant select on table "public"."categories" to "authenticated";
+ALTER TABLE "public"."categories" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."categories_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
-grant trigger on table "public"."categories" to "authenticated";
 
-grant truncate on table "public"."categories" to "authenticated";
 
-grant update on table "public"."categories" to "authenticated";
+CREATE TABLE IF NOT EXISTS "public"."events" (
+    "id" bigint NOT NULL,
+    "title" "text" NOT NULL,
+    "datetime" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "category_id" bigint NOT NULL
+);
 
-grant delete on table "public"."categories" to "postgres";
 
-grant insert on table "public"."categories" to "postgres";
+ALTER TABLE "public"."events" OWNER TO "supabase_admin";
 
-grant references on table "public"."categories" to "postgres";
 
-grant select on table "public"."categories" to "postgres";
+ALTER TABLE "public"."events" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."events_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
-grant trigger on table "public"."categories" to "postgres";
 
-grant truncate on table "public"."categories" to "postgres";
 
-grant update on table "public"."categories" to "postgres";
+CREATE TABLE IF NOT EXISTS "public"."notes" (
+    "id" bigint NOT NULL,
+    "title" "text" NOT NULL,
+    "note" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "category_id" bigint NOT NULL
+);
 
-grant delete on table "public"."categories" to "service_role";
 
-grant insert on table "public"."categories" to "service_role";
+ALTER TABLE "public"."notes" OWNER TO "supabase_admin";
 
-grant references on table "public"."categories" to "service_role";
 
-grant select on table "public"."categories" to "service_role";
+ALTER TABLE "public"."notes" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."notes_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
-grant trigger on table "public"."categories" to "service_role";
 
-grant truncate on table "public"."categories" to "service_role";
 
-grant update on table "public"."categories" to "service_role";
+CREATE TABLE IF NOT EXISTS "public"."planners" (
+    "id" bigint NOT NULL,
+    "title" "text" NOT NULL,
+    "b_color" "text" NOT NULL,
+    "a_color" "text" NOT NULL,
+    "font" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "user_id" "uuid" NOT NULL
+);
 
-grant delete on table "public"."events" to "anon";
 
-grant insert on table "public"."events" to "anon";
+ALTER TABLE "public"."planners" OWNER TO "supabase_admin";
 
-grant references on table "public"."events" to "anon";
 
-grant select on table "public"."events" to "anon";
+ALTER TABLE "public"."planners" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."planners_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
-grant trigger on table "public"."events" to "anon";
 
-grant truncate on table "public"."events" to "anon";
 
-grant update on table "public"."events" to "anon";
+CREATE TABLE IF NOT EXISTS "public"."tasks" (
+    "id" bigint NOT NULL,
+    "title" "text" NOT NULL,
+    "task" "text" NOT NULL,
+    "date" "date" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "category_id" bigint NOT NULL
+);
 
-grant delete on table "public"."events" to "authenticated";
 
-grant insert on table "public"."events" to "authenticated";
+ALTER TABLE "public"."tasks" OWNER TO "supabase_admin";
 
-grant references on table "public"."events" to "authenticated";
 
-grant select on table "public"."events" to "authenticated";
+ALTER TABLE "public"."tasks" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."tasks_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
-grant trigger on table "public"."events" to "authenticated";
 
-grant truncate on table "public"."events" to "authenticated";
 
-grant update on table "public"."events" to "authenticated";
+ALTER TABLE ONLY "public"."categories"
+    ADD CONSTRAINT "categories_pkey" PRIMARY KEY ("id");
 
-grant delete on table "public"."events" to "postgres";
 
-grant insert on table "public"."events" to "postgres";
 
-grant references on table "public"."events" to "postgres";
+ALTER TABLE ONLY "public"."events"
+    ADD CONSTRAINT "events_pkey" PRIMARY KEY ("id");
 
-grant select on table "public"."events" to "postgres";
 
-grant trigger on table "public"."events" to "postgres";
 
-grant truncate on table "public"."events" to "postgres";
+ALTER TABLE ONLY "public"."notes"
+    ADD CONSTRAINT "notes_pkey" PRIMARY KEY ("id");
 
-grant update on table "public"."events" to "postgres";
 
-grant delete on table "public"."events" to "service_role";
 
-grant insert on table "public"."events" to "service_role";
+ALTER TABLE ONLY "public"."planners"
+    ADD CONSTRAINT "planners_pkey" PRIMARY KEY ("id");
 
-grant references on table "public"."events" to "service_role";
 
-grant select on table "public"."events" to "service_role";
 
-grant trigger on table "public"."events" to "service_role";
+ALTER TABLE ONLY "public"."tasks"
+    ADD CONSTRAINT "tasks_pkey" PRIMARY KEY ("id");
 
-grant truncate on table "public"."events" to "service_role";
 
-grant update on table "public"."events" to "service_role";
 
-grant delete on table "public"."notes" to "anon";
+ALTER TABLE ONLY "public"."categories"
+    ADD CONSTRAINT "categories_planner_id_fkey" FOREIGN KEY ("planner_id") REFERENCES "public"."planners"("id");
 
-grant insert on table "public"."notes" to "anon";
 
-grant references on table "public"."notes" to "anon";
 
-grant select on table "public"."notes" to "anon";
+ALTER TABLE ONLY "public"."events"
+    ADD CONSTRAINT "events_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id");
 
-grant trigger on table "public"."notes" to "anon";
 
-grant truncate on table "public"."notes" to "anon";
 
-grant update on table "public"."notes" to "anon";
+ALTER TABLE ONLY "public"."notes"
+    ADD CONSTRAINT "notes_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id");
 
-grant delete on table "public"."notes" to "authenticated";
 
-grant insert on table "public"."notes" to "authenticated";
 
-grant references on table "public"."notes" to "authenticated";
+ALTER TABLE ONLY "public"."planners"
+    ADD CONSTRAINT "planners_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
-grant select on table "public"."notes" to "authenticated";
 
-grant trigger on table "public"."notes" to "authenticated";
 
-grant truncate on table "public"."notes" to "authenticated";
+ALTER TABLE ONLY "public"."tasks"
+    ADD CONSTRAINT "tasks_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id");
 
-grant update on table "public"."notes" to "authenticated";
 
-grant delete on table "public"."notes" to "postgres";
 
-grant insert on table "public"."notes" to "postgres";
 
-grant references on table "public"."notes" to "postgres";
 
-grant select on table "public"."notes" to "postgres";
+ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
-grant trigger on table "public"."notes" to "postgres";
 
-grant truncate on table "public"."notes" to "postgres";
 
-grant update on table "public"."notes" to "postgres";
 
-grant delete on table "public"."notes" to "service_role";
 
-grant insert on table "public"."notes" to "service_role";
+GRANT USAGE ON SCHEMA "public" TO "postgres";
+GRANT USAGE ON SCHEMA "public" TO "anon";
+GRANT USAGE ON SCHEMA "public" TO "authenticated";
+GRANT USAGE ON SCHEMA "public" TO "service_role";
 
-grant references on table "public"."notes" to "service_role";
 
-grant select on table "public"."notes" to "service_role";
 
-grant trigger on table "public"."notes" to "service_role";
 
-grant truncate on table "public"."notes" to "service_role";
 
-grant update on table "public"."notes" to "service_role";
 
-grant delete on table "public"."planners" to "anon";
 
-grant insert on table "public"."planners" to "anon";
 
-grant references on table "public"."planners" to "anon";
 
-grant select on table "public"."planners" to "anon";
 
-grant trigger on table "public"."planners" to "anon";
 
-grant truncate on table "public"."planners" to "anon";
 
-grant update on table "public"."planners" to "anon";
 
-grant delete on table "public"."planners" to "authenticated";
 
-grant insert on table "public"."planners" to "authenticated";
 
-grant references on table "public"."planners" to "authenticated";
 
-grant select on table "public"."planners" to "authenticated";
 
-grant trigger on table "public"."planners" to "authenticated";
 
-grant truncate on table "public"."planners" to "authenticated";
 
-grant update on table "public"."planners" to "authenticated";
 
-grant delete on table "public"."planners" to "postgres";
 
-grant insert on table "public"."planners" to "postgres";
 
-grant references on table "public"."planners" to "postgres";
 
-grant select on table "public"."planners" to "postgres";
 
-grant trigger on table "public"."planners" to "postgres";
 
-grant truncate on table "public"."planners" to "postgres";
 
-grant update on table "public"."planners" to "postgres";
 
-grant delete on table "public"."planners" to "service_role";
 
-grant insert on table "public"."planners" to "service_role";
 
-grant references on table "public"."planners" to "service_role";
 
-grant select on table "public"."planners" to "service_role";
 
-grant trigger on table "public"."planners" to "service_role";
 
-grant truncate on table "public"."planners" to "service_role";
 
-grant update on table "public"."planners" to "service_role";
 
-grant delete on table "public"."tasks" to "anon";
 
-grant insert on table "public"."tasks" to "anon";
 
-grant references on table "public"."tasks" to "anon";
 
-grant select on table "public"."tasks" to "anon";
 
-grant trigger on table "public"."tasks" to "anon";
 
-grant truncate on table "public"."tasks" to "anon";
 
-grant update on table "public"."tasks" to "anon";
 
-grant delete on table "public"."tasks" to "authenticated";
 
-grant insert on table "public"."tasks" to "authenticated";
 
-grant references on table "public"."tasks" to "authenticated";
 
-grant select on table "public"."tasks" to "authenticated";
 
-grant trigger on table "public"."tasks" to "authenticated";
 
-grant truncate on table "public"."tasks" to "authenticated";
 
-grant update on table "public"."tasks" to "authenticated";
 
-grant delete on table "public"."tasks" to "postgres";
 
-grant insert on table "public"."tasks" to "postgres";
 
-grant references on table "public"."tasks" to "postgres";
 
-grant select on table "public"."tasks" to "postgres";
 
-grant trigger on table "public"."tasks" to "postgres";
 
-grant truncate on table "public"."tasks" to "postgres";
 
-grant update on table "public"."tasks" to "postgres";
 
-grant delete on table "public"."tasks" to "service_role";
 
-grant insert on table "public"."tasks" to "service_role";
 
-grant references on table "public"."tasks" to "service_role";
 
-grant select on table "public"."tasks" to "service_role";
 
-grant trigger on table "public"."tasks" to "service_role";
 
-grant truncate on table "public"."tasks" to "service_role";
 
-grant update on table "public"."tasks" to "service_role";
 
-grant delete on table "public"."users" to "anon";
 
-grant insert on table "public"."users" to "anon";
 
-grant references on table "public"."users" to "anon";
 
-grant select on table "public"."users" to "anon";
 
-grant trigger on table "public"."users" to "anon";
 
-grant truncate on table "public"."users" to "anon";
 
-grant update on table "public"."users" to "anon";
 
-grant delete on table "public"."users" to "authenticated";
 
-grant insert on table "public"."users" to "authenticated";
 
-grant references on table "public"."users" to "authenticated";
 
-grant select on table "public"."users" to "authenticated";
 
-grant trigger on table "public"."users" to "authenticated";
 
-grant truncate on table "public"."users" to "authenticated";
 
-grant update on table "public"."users" to "authenticated";
 
-grant delete on table "public"."users" to "postgres";
 
-grant insert on table "public"."users" to "postgres";
 
-grant references on table "public"."users" to "postgres";
 
-grant select on table "public"."users" to "postgres";
 
-grant trigger on table "public"."users" to "postgres";
 
-grant truncate on table "public"."users" to "postgres";
 
-grant update on table "public"."users" to "postgres";
 
-grant delete on table "public"."users" to "service_role";
 
-grant insert on table "public"."users" to "service_role";
 
-grant references on table "public"."users" to "service_role";
 
-grant select on table "public"."users" to "service_role";
 
-grant trigger on table "public"."users" to "service_role";
 
-grant truncate on table "public"."users" to "service_role";
 
-grant update on table "public"."users" to "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GRANT ALL ON TABLE "public"."categories" TO "postgres";
+GRANT ALL ON TABLE "public"."categories" TO "anon";
+GRANT ALL ON TABLE "public"."categories" TO "authenticated";
+GRANT ALL ON TABLE "public"."categories" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."categories_id_seq" TO "postgres";
+GRANT ALL ON SEQUENCE "public"."categories_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."categories_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."categories_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."events" TO "postgres";
+GRANT ALL ON TABLE "public"."events" TO "anon";
+GRANT ALL ON TABLE "public"."events" TO "authenticated";
+GRANT ALL ON TABLE "public"."events" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."events_id_seq" TO "postgres";
+GRANT ALL ON SEQUENCE "public"."events_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."events_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."events_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."notes" TO "postgres";
+GRANT ALL ON TABLE "public"."notes" TO "anon";
+GRANT ALL ON TABLE "public"."notes" TO "authenticated";
+GRANT ALL ON TABLE "public"."notes" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."notes_id_seq" TO "postgres";
+GRANT ALL ON SEQUENCE "public"."notes_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."notes_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."notes_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."planners" TO "postgres";
+GRANT ALL ON TABLE "public"."planners" TO "anon";
+GRANT ALL ON TABLE "public"."planners" TO "authenticated";
+GRANT ALL ON TABLE "public"."planners" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."planners_id_seq" TO "postgres";
+GRANT ALL ON SEQUENCE "public"."planners_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."planners_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."planners_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tasks" TO "postgres";
+GRANT ALL ON TABLE "public"."tasks" TO "anon";
+GRANT ALL ON TABLE "public"."tasks" TO "authenticated";
+GRANT ALL ON TABLE "public"."tasks" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."tasks_id_seq" TO "postgres";
+GRANT ALL ON SEQUENCE "public"."tasks_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."tasks_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."tasks_id_seq" TO "service_role";
+
+
+
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

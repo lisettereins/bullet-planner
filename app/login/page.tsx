@@ -6,35 +6,32 @@ import { BookOpen, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/supabaseClient";
 
-export default function AuthPage() {
+export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Login Supabase’iga
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (!email || !password) {
+        setError("Please fill in all fields");
+        return;
+      }
 
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(error.message);
-        setIsLoading(false);
         return;
       }
 
@@ -47,36 +44,12 @@ export default function AuthPage() {
     }
   };
 
-  // Sign-up lokaalselt 
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      setIsLoading(false);
-      return;
-    }
-
-    // Lokaalne simulatsioon
-    localStorage.setItem("auth", JSON.stringify({ email, password }));
-    router.push("/dashboard");
-    setIsLoading(false);
-  };
-
   return (
     <div className="min-h-screen bg-white text-black flex flex-col">
       {/* Header */}
       <div className="border-b border-black/10 p-4 sm:p-6">
         <Link
-          href="/"
+          href="/login"
           className="inline-flex items-center gap-2 text-black hover:text-gray-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
@@ -95,22 +68,13 @@ export default function AuthPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-center mb-2">
-            {isSignUp ? "Create Account" : "Welcome Back"}
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            {isSignUp ? "Start organizing your life today" : "Sign in to your planner"}
-          </p>
+          <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
+          <p className="text-center text-gray-600 mb-8">Start organizing your life today</p>
 
           {/* Form */}
-          <form
-            onSubmit={isSignUp ? handleSignUp : handleLogin}
-            className="space-y-4"
-          >
+          <form onSubmit={handleSignUp} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
-              </label>
+              <label htmlFor="email" className="block text-sm font-medium mb-2">Email Address</label>
               <input
                 type="email"
                 id="email"
@@ -122,9 +86,7 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
               <input
                 type="password"
                 id="password"
@@ -146,25 +108,9 @@ export default function AuthPage() {
               disabled={isLoading}
               className="w-full bg-black text-white py-3 rounded-sm font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
+              {isLoading ? "Loading..." : "Create Account"}
             </button>
           </form>
-
-          {/* Toggle login / signup */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError("");
-                }}
-                className="text-black font-semibold hover:underline"
-              >
-                {isSignUp ? "Sign In" : "Sign Up"}
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>

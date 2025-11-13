@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/supabaseClient";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,28 +21,24 @@ export default function Login() {
     try {
       if (!email || !password) {
         setError("Please fill in all fields");
-        setIsLoading(false);
         return;
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setError("Please enter a valid email");
-        setIsLoading(false);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
         return;
       }
 
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters");
-        setIsLoading(false);
-        return;
-      }
-
-      // Simulate login
-      localStorage.setItem("auth", JSON.stringify({ email, isLoggedIn: true }));
-      localStorage.setItem("userEmail", email);
-
+      //  Supabase annab sessiooni JWT tokeniga
       router.push("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

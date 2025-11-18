@@ -6,32 +6,44 @@ import { BookOpen, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/supabaseClient";
 
-export default function SignUp() {
+export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+    setIsLoading(true);
+
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      if (!email || !password) {
-        setError("Please fill in all fields");
-        return;
+      let result;
+
+      if (isSignUp) {
+        // SIGN UP USING SUPABASE
+        result = await supabase.auth.signUp({ email, password });
+      } else {
+        // LOGIN USING SUPABASE
+        result = await supabase.auth.signInWithPassword({ email, password });
       }
 
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
+      if (result.error) {
+        setError(result.error.message);
         return;
       }
 
@@ -49,7 +61,7 @@ export default function SignUp() {
       {/* Header */}
       <div className="border-b border-black/10 p-4 sm:p-6">
         <Link
-          href="/login"
+          href="/"
           className="inline-flex items-center gap-2 text-black hover:text-gray-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
@@ -60,6 +72,7 @@ export default function SignUp() {
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="w-full max-w-md">
+
           {/* Logo */}
           <div className="mb-8 flex justify-center">
             <div className="border-2 border-black rounded-sm p-4 inline-block">
@@ -68,32 +81,36 @@ export default function SignUp() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
-          <p className="text-center text-gray-600 mb-8">Start organizing your life today</p>
+          <h1 className="text-3xl font-bold text-center mb-2">
+            {isSignUp ? "Create Account" : "Welcome Back"}
+          </h1>
+          <p className="text-center text-gray-600 mb-8">
+            {isSignUp
+              ? "Start organizing your life today"
+              : "Sign in to your planner"}
+          </p>
 
           {/* Form */}
-          <form onSubmit={handleSignUp} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">Email Address</label>
+              <label className="block text-sm font-medium mb-2">Email</label>
               <input
                 type="email"
-                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-black/20 rounded-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-black/20 rounded-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
+              <label className="block text-sm font-medium mb-2">Password</label>
               <input
                 type="password"
-                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-black/20 rounded-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-black/20 rounded-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
               />
             </div>
 
@@ -106,11 +123,29 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-black text-white py-3 rounded-sm font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black text-white py-3 rounded-sm font-semibold hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Loading..." : "Create Account"}
+              {isLoading
+                ? "Loading..."
+                : isSignUp
+                ? "Create Account"
+                : "Sign In"}
             </button>
           </form>
+
+          {/* Toggle */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                className="text-black font-semibold hover:underline"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? "Sign In" : "Sign Up"}
+              </button>
+            </p>
+          </div>
+
         </div>
       </div>
     </div>

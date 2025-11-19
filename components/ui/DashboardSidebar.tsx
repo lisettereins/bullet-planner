@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { Calendar, ListChecks, Image as ImageIcon, Settings } from "lucide-react";
+import MiniCalendar from "@/components/ui/MiniCalendar";
+
 
 export default function DashboardSidebar() {
   return (
     <aside className="border-r border-black/10 w-64 p-6">
       <nav className="space-y-6">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">
-          <Calendar className="w-4 h-4" strokeWidth={2} /> Calendar
-        </h3>
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">Calendar</h3>
+          <MiniCalendar currentDate={new Date()} onSelectDate={(d) => console.log(d)} />
+        </div>
         <ul className="space-y-2 text-sm">
           <li>
             <Link href="/calendar" className="hover:text-gray-600 block">

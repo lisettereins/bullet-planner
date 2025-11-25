@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
-import { supabase } from "@/lib/supabase/supabaseClient";
 
 import DayView from "@/components/ui/DayView";
 import WeekView from "@/components/ui/WeekView";
@@ -20,13 +20,8 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("month");
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) return router.push("/");
-      setUserEmail(data.session.user.email);
-      setLoading(false);
-    };
-    load();
+    setUserEmail("user@example.com"); // placeholder for now
+    setLoading(false);
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -47,26 +42,85 @@ export default function CalendarPage() {
     setSelectedDate(d);
   };
 
+  const formatTitle = () => {
+    if (viewMode === "day") {
+      return selectedDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+
+    if (viewMode === "week") {
+      return `Week of ${selectedDate.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })}`;
+    }
+
+    return selectedDate.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
+
       <DashboardHeader title="Calendar" userEmail={userEmail!} />
 
       <div className="flex flex-1">
         <DashboardSidebar active="calendar" />
 
         <main className="flex-1 p-6">
-          <div className="flex gap-2 mb-4">
-            <button onClick={() => setViewMode("day")}>Day</button>
-            <button onClick={() => setViewMode("week")}>Week</button>
-            <button onClick={() => setViewMode("month")}>Month</button>
 
-            <button onClick={handlePrev}>Prev</button>
-            <button onClick={handleNext}>Next</button>
+          {/* ----------------- TOP BAR ----------------- */}
+          <div className="flex items-center justify-between mb-6">
+
+            {/* Left side — view mode buttons */}
+            <div className="flex gap-2">
+              {["day", "week", "month"].map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode as ViewMode)}
+                  className={`px-3 py-1 border rounded 
+                    ${viewMode === mode ? "bg-black text-white" : "bg-white text-black"}
+                  `}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Right side — arrows + title */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handlePrev}
+                className="px-3 py-1 border rounded bg-white"
+              >
+                ←
+              </button>
+
+              <h2 className="text-2xl font-bold text-center min-w-[220px]">
+                {formatTitle()}
+              </h2>
+
+              <button
+                onClick={handleNext}
+                className="px-3 py-1 border rounded bg-white"
+              >
+                →
+              </button>
+            </div>
           </div>
 
+          {/* ----------------- ACTIVE VIEW ----------------- */}
           {viewMode === "day" && <DayView selectedDate={selectedDate} />}
           {viewMode === "week" && <WeekView selectedDate={selectedDate} />}
           {viewMode === "month" && <MonthView selectedDate={selectedDate} />}
+
         </main>
       </div>
     </div>

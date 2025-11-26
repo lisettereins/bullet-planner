@@ -1,4 +1,5 @@
 import EventPage from '@/components/event-page';
+import NewHeader from '@/components/new-header';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import { createClient } from '@/lib/supabase/server';
 
@@ -13,6 +14,7 @@ export default async function Page({ params }: { params: { date: string } }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
+      <NewHeader/>
       <div className="flex flex-1">
         <DashboardSidebar />
         <main className="flex-1 p-6 overflow-y-auto">

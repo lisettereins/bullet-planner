@@ -11,19 +11,28 @@ export interface CalendarEntryProps {
   onDelete: (id: string) => void;
 }
 
-export default function CalendarEntry({ id, title, content, startTime, endTime, onDelete }: CalendarEntryProps) {
+export default function CalendarEntry({
+  id,
+  title,
+  content,
+  startTime,
+  endTime,
+  onDelete,
+}: CalendarEntryProps) {
   return (
-    <div className="absolute left-12 right-0 rounded-sm bg-purple-100 p-2 border-t-2 border-black"
-         style={{ top: 0, height: 50 }}>
+    <div
+      className="absolute left-0 right-0 rounded-sm bg-purple-300 p-2 border-t-2 border-black overflow-hidden break-words"
+    >
       <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-1 text-sm font-medium text-purple-700">
+        <div className="flex-1">
+          <div className="flex items-center gap-1 text-sm font-medium text-black">
             <Clock className="w-4 h-4" strokeWidth={2} />
             {startTime} - {endTime}
           </div>
-          <h3 className="font-semibold">{title}</h3>
-          {content && <p className="text-gray-700 text-sm">{content}</p>}
+          <h3 className="font-semibold text-black">{title}</h3>
+          {content && <p className="text-black text-sm">{content}</p>}
         </div>
+
         <button
           onClick={() => onDelete(id)}
           className="p-1 hover:bg-red-100 rounded-sm text-red-600"

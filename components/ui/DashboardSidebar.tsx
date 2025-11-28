@@ -6,6 +6,7 @@ import MiniCalendar from "@/components/ui/MiniCalendar";
 
 
 export default function DashboardSidebar() {
+  const today = new Date().toISOString().split("T")[0]
   return (
     <aside className="border-r border-black/10 w-64 p-6">
       <nav className="space-y-6">
@@ -22,8 +23,8 @@ export default function DashboardSidebar() {
           </ul>
         <ul className="space-y-2 text-sm">
           <li><Link href="/daily-tasks" className="hover:text-gray-600 block">Daily Tasks</Link></li>
-          <li><Link href="/notes" className="hover:text-gray-600 block">Notes</Link></li>
-          <li><Link href="/events" className="hover:text-gray-600 block">Events</Link></li>
+          <li><Link href={`/notes/${today}`} className="hover:text-gray-600 block">Notes</Link></li>
+          <li><Link href={`/events/${today}`} className="hover:text-gray-600 block">Events</Link></li>
           <li><Link href="/planner" className="hover:text-gray-600 block font-semibold">📖 My Planner</Link></li>
         </ul>
 

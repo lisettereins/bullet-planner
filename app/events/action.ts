@@ -37,3 +37,18 @@ export async function createEvent(
   }
   return { success: true };
 }
+
+export async function deleteEvent(eventId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("events")
+    .delete()
+    .eq("id", eventId)
+    .select();
+
+  if (error) {
+    throw new Error("delete failed");
+  }
+  return { success: true };
+}

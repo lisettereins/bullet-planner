@@ -1,4 +1,3 @@
-
 import DeleteNoteBtn from '@/components/delete-note-btn';
 import NewHeader from '@/components/new-header';
 import NotePage from '@/components/note-page';
@@ -25,7 +24,7 @@ export default async function Page({ params }: { params: { date: string } }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
-      <NewHeader/>
+      <NewHeader />
       <div className="flex flex-1">
         <DashboardSidebar />
         <main className="flex-1 p-6 overflow-y-auto">
@@ -43,15 +42,17 @@ export default async function Page({ params }: { params: { date: string } }) {
                 notes?.map((note) => (
                   <div
                     key={note.id}
-                    className="flex flex-col gap-1 p-2 border-b last:border-b-0"
+                    className="p-4 border rounded-sm flex items-start gap-3 bg-white"
                   >
-                    <h3 className="font-semibold text-lg">
-                      Title: {note.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm whitespace-pre-wrap">
-                      Note: {note.note}
-                    </p>
-                    <DeleteNoteBtn noteId = {note.id}/>
+                    <div className="flex flex-col flex-1">
+                      <h3 className="font-semibold text-lg">
+                        Title: {note.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm whitespace-pre-wrap">
+                        Note: {note.note}
+                      </p>
+                    </div>
+                    <DeleteNoteBtn noteId={note.id} />
                   </div>
                 ))
               )}

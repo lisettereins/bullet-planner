@@ -1,4 +1,5 @@
 
+import DeleteNoteBtn from '@/components/delete-note-btn';
 import NewHeader from '@/components/new-header';
 import NotePage from '@/components/note-page';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
@@ -50,6 +51,7 @@ export default async function Page({ params }: { params: { date: string } }) {
                     <p className="text-gray-600 text-sm whitespace-pre-wrap">
                       Note: {note.note}
                     </p>
+                    <DeleteNoteBtn noteId = {note.id}/>
                   </div>
                 ))
               )}

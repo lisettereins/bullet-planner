@@ -31,3 +31,18 @@ export async function createNote(title: string, note: string, date: string) {
   }
   return { success: true };
 }
+
+export async function deleteNote(noteId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', noteId)
+    .select();
+
+  if (error) {
+    throw new Error('delete failed');
+  }
+  return { success: true };
+}

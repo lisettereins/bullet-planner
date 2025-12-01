@@ -2,23 +2,31 @@ import EventPage from '@/components/event-page';
 import NewHeader from '@/components/new-header';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function Page({ params }: { params: { date: string } }) {
   const { date } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/login');
+  }
+
   const { data: events } = await supabase
     .from('events')
     .select()
-    .eq('date', date);
+    .eq('date', date)
+    .eq('user_id', user.id);
 
   const formatTime = (time: string) => {
-  if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
-    return time.slice(0, 5); // "HH:MM"
-  }
-  return time; // fallback
+    if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
+      return time.slice(0, 5); // "HH:MM"
+    }
+    return time; // fallback
   };
-
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">

@@ -3,6 +3,7 @@ import NewHeader from '@/components/new-header';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import WelcomeUser from '@/components/welcome-user';
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function DashboardPage({
   params,
@@ -20,20 +21,30 @@ export default async function DashboardPage({
     return time;
   };
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/login');
+  }
+  
   const { data: events } = await supabase
     .from('events')
     .select()
-    .eq('date', date);
+    .eq('date', date)
+    .eq('user_id', user.id);
 
   const { data: notes } = await supabase
     .from('notes')
     .select()
-    .eq('date', date);
+    .eq('date', date)
+    .eq('user_id', user.id);
 
   const { data: tasks } = await supabase
     .from('tasks')
     .select()
-    .eq('date', date);
+    .eq('date', date)
+    .eq('user_id', user.id);
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">

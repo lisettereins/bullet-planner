@@ -3,15 +3,24 @@ import NewHeader from '@/components/new-header';
 import NotePage from '@/components/note-page';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function Page({ params }: { params: { date: string } }) {
   const { date } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/login');
+  }
+
   const { data: notes } = await supabase
     .from('notes')
     .select()
-    .eq('date', date);
+    .eq('date', date)
+    .eq('user_id', user.id);
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">

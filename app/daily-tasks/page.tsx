@@ -4,20 +4,21 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
-import { supabase } from "@/lib/supabase/supabaseClient";
 import TaskDatePicker from "@/components/ui/tasks/TaskDatePicker";
 import AddTaskForm from "@/components/ui/tasks/AddTaskForm";
 import TaskList from "@/components/ui/tasks/TaskList";
 import { Task } from "@/components/ui/tasks/types";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DailyTasksPage() {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | undefined>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [loading, setLoading] = useState(true);
+  const supabase = createClient()
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -31,7 +32,7 @@ export default function DailyTasksPage() {
       setLoading(false);
     };
     fetchSession();
-  }, [router]);
+  }, [router, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

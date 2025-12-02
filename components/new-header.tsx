@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookOpen, LogOut } from 'lucide-react';
-import { supabase } from '@/lib/supabase/supabaseClient';
 import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function NewHeader() {
   const [userEmail, setUserEmail] = useState<string | undefined>();
   const router = useRouter();
+
+  const supabase = createClient()
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -17,7 +19,7 @@ export default function NewHeader() {
       else setUserEmail(data.session.user.email);
     };
     fetchSession();
-  }, [router]);
+  }, [router, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

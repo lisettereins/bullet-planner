@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
+
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,8 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

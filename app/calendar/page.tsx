@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 import DashboardHeader from "@/components/ui/DashboardHeader";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
@@ -10,7 +11,6 @@ import DayView from "@/components/ui/calendar/DayView";
 import WeekView from "@/components/ui/calendar/WeekView";
 import MonthView from "@/components/ui/calendar/MonthView";
 
-import { supabase } from "@/lib/supabase/supabaseClient";
 
 type ViewMode = "day" | "week" | "month";
 
@@ -20,6 +20,7 @@ export default function CalendarPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const supabase = createClient()
 
   // Lae Supabase sessioon ja email
   useEffect(() => {

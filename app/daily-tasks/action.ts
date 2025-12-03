@@ -44,3 +44,18 @@ export async function taskDone(taskId: string, done: boolean) {
   }
   return { success: true };
 }
+
+export async function deleteTask(taskId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', taskId)
+    .select();
+
+  if (error) {
+    throw new Error('delete failed');
+  }
+  return { success: true };
+}

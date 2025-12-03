@@ -34,7 +34,7 @@ export default async function DailyTasksPage({
         <DashboardSidebar />
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            <NewDatePicker selectedDate={date} />
+            <NewDatePicker selectedDate={date} param = "daily-tasks" />
             <AddTaskForm date={date} />
             <TaskItem tasks={tasks} />
           </div>

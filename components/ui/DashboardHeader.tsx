@@ -14,12 +14,14 @@ export default function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/"); // tagasi home peale logout
+    router.push("/"); // tagasi avalehele
   };
 
   return (
     <header className="border-b border-black/10 p-4 flex justify-between items-center">
-      <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+      
+      {/* LOGO VIIB DASHBOARDILE */}
+      <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
         <div className="border-2 border-black rounded-sm p-2">
           <BookOpen className="w-5 h-5" strokeWidth={1.5} />
         </div>
@@ -29,6 +31,7 @@ export default function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       {userEmail && (
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">{userEmail}</span>
+
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm"

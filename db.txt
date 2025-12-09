@@ -73,7 +73,11 @@ execute function update_updated_at_column();
 
 
 
--- Tabel listide jaoks (iga list kuulub konkreetsele kasutajale)
+-- =============================================
+-- CREATE TABLES
+-- =============================================
+
+-- Lists table
 create table if not exists lists (
     id bigint generated always as identity primary key,
     user_id uuid not null references auth.users(id) on delete cascade,
@@ -81,11 +85,106 @@ create table if not exists lists (
     created_at timestamp with time zone default now()
 );
 
--- Tabel itemite jaoks
+-- Items table
 create table if not exists items (
     id bigint generated always as identity primary key,
     list_id bigint not null references lists(id) on delete cascade,
     title text not null,
+    done boolean default false,
     created_at timestamp with time zone default now()
 );
 
+-- =============================================
+-- ENABLE ROW LEVEL SECURITY
+-- =============================================
+
+alter table lists enable row level security;
+alter table items enable row level security;
+
+-- =============================================
+-- LISTS POLICIES
+-- =============================================
+
+-- SELECT
+create policy "Users can read their own lists"
+on lists
+for select
+to authenticated
+using (user_id = auth.uid());
+
+-- INSERT
+create policy "Users can insert their own lists"
+on lists
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+-- UPDATE
+create policy "Users can update their own lists"
+on lists
+for update
+to authenticated
+using (user_id = auth.uid());
+
+-- DELETE
+create policy "Users can delete their own lists"
+on lists
+for delete
+to authenticated
+using (user_id = auth.uid());
+
+-- =============================================
+-- ITEMS POLICIES
+-- =============================================
+
+-- SELECT
+create policy "Users can read items of their lists"
+on items
+for select
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- INSERT
+create policy "Users can insert items into their lists"
+on items
+for insert
+to authenticated
+with check (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- UPDATE
+create policy "Users can update items of their lists"
+on items
+for update
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- DELETE
+create policy "Users can delete items of their lists"
+on items
+for delete
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);

@@ -5,6 +5,7 @@ import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import { createClient } from "@/lib/supabase/client";
+import GalleryCategories from "@/components/ui/gallery/GalleryCategories";
 
 const supabase = createClient();
 
@@ -33,7 +34,6 @@ export default function PhotoGalleryPage() {
   const [error, setError] = useState<string | null>(null);
   const [enlargedPhoto, setEnlargedPhoto] = useState<Photo | null>(null);
 
-  // Lae kasutaja ja fotod
   useEffect(() => {
     let mounted = true;
 
@@ -229,21 +229,11 @@ export default function PhotoGalleryPage() {
             )}
 
             {/* Categories */}
-            {categories.length > 1 && (
-              <div className="flex gap-2 mb-4 flex-wrap">
-                {categories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded-sm font-medium border ${
-                      selectedCategory === cat ? "bg-black text-white" : "border-black/20"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
+            <GalleryCategories
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
 
             {/* Add Photo Form */}
             {!showAddPhoto && (
@@ -257,6 +247,7 @@ export default function PhotoGalleryPage() {
 
             {showAddPhoto && (
               <form onSubmit={handleAddPhoto} className="mb-8 p-6 border-2 border-black rounded-sm bg-gray-50">
+                {/* Form fields remain unchanged */}
                 <div className="mb-6 flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input

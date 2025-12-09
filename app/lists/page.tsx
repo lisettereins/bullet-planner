@@ -5,6 +5,7 @@ import { Plus, ListChecks, Trash2 } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import ListItem from "@/components/ui/list/ListItem";
+import NewListForm from "@/components/ui/list/NewListForm";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();

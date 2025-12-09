@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Mail, Lock, Trash2, AlertCircle } from "lucide-react";
+import { Lock, Trash2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import ProfileCard from "@/components/ui/profile/ProfileCard";
+import EmailChange from "@/components/ui/profile/EmailChange";
 
 interface UserProfile {
   name: string;
@@ -29,10 +30,6 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Email state
-  const [isChangingEmail, setIsChangingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-
   // Password state
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -52,7 +49,6 @@ export default function ProfilePage() {
       }
 
       setUserEmail(data.user.email);
-      setNewEmail(data.user.email);
 
       // Fetch profile
       const { data: profileData } = await supabase
@@ -104,43 +100,6 @@ export default function ProfilePage() {
       setTimeout(() => setMessage(""), 3000);
     } catch (err: any) {
       setError(err.message || "Error updating profile");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Email change
-  const handleChangeEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setMessage("");
-
-    if (!newEmail.trim()) {
-      setError("Email cannot be empty");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail)) {
-      setError("Please enter a valid email");
-      return;
-    }
-
-    if (newEmail === userEmail) {
-      setError("New email must be different from current email");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-
-      setUserEmail(newEmail);
-      setMessage("Email updated successfully!");
-      setIsChangingEmail(false);
-    } catch (err: any) {
-      setError(err.message || "Error updating email");
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +184,7 @@ export default function ProfilePage() {
           {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-sm text-red-700 flex gap-3"><AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />{error}</div>}
 
           <div className="max-w-2xl mx-auto space-y-8">
-            {/* Profile card using ProfileCard component */}
+            {/* Profile card */}
             {!editingProfile ? (
               <ProfileCard
                 name={profile.name}
@@ -245,8 +204,48 @@ export default function ProfilePage() {
               </form>
             )}
 
-            {/* Email, Password, Delete sections jäävad samaks */}
-            {/* ... (kood on sama nagu enne, email, password, danger zone) */}
+            {/* Email change */}
+            <EmailChange
+              currentEmail={userEmail}
+              setEmail={setUserEmail}
+              setMessage={setMessage}
+              setError={setError}
+            />
+
+            {/* Password section */}
+            <div className="border border-black/10 rounded-sm p-6">
+              <div className="flex items-center gap-3 mb-4"><Lock className="w-5 h-5" /><h2 className="text-xl font-semibold">Password</h2></div>
+              {!isChangingPassword ? (
+                <button onClick={() => setIsChangingPassword(true)} className="bg-black text-white px-4 py-2 rounded-sm font-semibold hover:bg-gray-900 transition-colors text-sm">Change Password</button>
+              ) : (
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <input type="password" placeholder="Current password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black" required />
+                  <input type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black" required />
+                  <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black" required />
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={isLoading} className="flex-1 bg-black text-white py-2 rounded-sm font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{isLoading ? "Updating..." : "Update Password"}</button>
+                    <button type="button" onClick={() => { setIsChangingPassword(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); setError(""); }} className="flex-1 bg-white border-2 border-black text-black py-2 rounded-sm font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* Danger zone */}
+            <div className="border-2 border-red-200 rounded-sm p-6 bg-red-50">
+              <div className="flex items-center gap-3 mb-4"><Trash2 className="w-5 h-5 text-red-600" /><h2 className="text-xl font-semibold text-red-600">Danger Zone</h2></div>
+              {!showDeleteConfirm ? (
+                <button onClick={() => setShowDeleteConfirm(true)} className="bg-red-600 text-white px-4 py-2 rounded-sm font-semibold hover:bg-red-700 transition-colors text-sm">Delete Account</button>
+              ) : (
+                <form onSubmit={handleDeleteAccount} className="space-y-4 p-4 bg-white border border-red-200 rounded-sm">
+                  <input type="text" placeholder='Type "DELETE"' value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())} className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-red-500" required />
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={isLoading || deleteConfirmText !== "DELETE"} className="flex-1 bg-red-600 text-white py-2 rounded-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{isLoading ? "Deleting..." : "Permanently Delete Account"}</button>
+                    <button type="button" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); setError(""); }} className="flex-1 bg-white border-2 border-black text-black py-2 rounded-sm font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
+                  </div>
+                </form>
+              )}
+            </div>
+
           </div>
         </main>
       </div>

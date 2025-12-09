@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Image as ImageIcon } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
-import { createClient } from "@/lib/supabase/client";
 import GalleryCategories from "@/components/ui/gallery/GalleryCategories";
+import PhotoCard from "@/components/ui/gallery/PhotoCard";
+import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
 
@@ -40,19 +41,13 @@ export default function PhotoGalleryPage() {
     const init = async () => {
       try {
         const { data: sessionData, error } = await supabase.auth.getSession();
-        if (error) {
-          setError("Failed to get session. Please log in.");
-          return console.error("Auth session error:", error);
-        }
+        if (error) return console.error("Auth session error:", error);
 
         const uid = sessionData?.session?.user?.id ?? null;
         if (!mounted) return;
 
         setUserId(uid);
         if (uid) await fetchPhotos(uid);
-      } catch (err) {
-        setError("Initialization failed. Please try again.");
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -82,8 +77,7 @@ export default function PhotoGalleryPage() {
       .order("uploaded_at", { ascending: false });
 
     if (error) {
-      setError("Failed to load photos. Please refresh.");
-      console.error("Fetch photos error:", error);
+      setError("Failed to load photos.");
     } else {
       setPhotos(data || []);
       const dynamicCategories = Array.from(
@@ -95,41 +89,19 @@ export default function PhotoGalleryPage() {
 
   const handleAddPhoto = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!userId) {
-      setError("You must be logged in to upload photos.");
-      return;
-    }
+    if (!userId) return setError("You must be logged in to upload photos.");
 
     let photoUrl = imageUrl;
 
-    if (uploadMethod === "file") {
-      if (!selectedFile) {
-        setError("Please select a file.");
-        return;
-      }
-
+    if (uploadMethod === "file" && selectedFile) {
       const fileExt = selectedFile.name.split(".").pop() || "jpg";
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${imageCategory || "Uncategorized"}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("photos")
-        .upload(filePath, selectedFile);
-
-      if (uploadError) {
-        setError("Upload failed: " + uploadError.message);
-        console.error("Upload error:", uploadError);
-        return;
-      }
+      const { error: uploadError } = await supabase.storage.from("photos").upload(filePath, selectedFile);
+      if (uploadError) return setError(uploadError.message);
 
       const { data } = supabase.storage.from("photos").getPublicUrl(filePath);
-      if (!data?.publicUrl) {
-        setError("Failed to get public URL for uploaded file.");
-        return;
-      }
-
+      if (!data?.publicUrl) return setError("Failed to get public URL for uploaded file.");
       photoUrl = data.publicUrl;
     }
 
@@ -144,27 +116,18 @@ export default function PhotoGalleryPage() {
       .select()
       .single();
 
-    if (error) {
-      setError("Failed to save photo: " + error.message);
-      console.error("Insert photo error:", error);
-    } else {
-      setPhotos([data as Photo, ...photos]);
-      if (data?.category && !categories.includes(data.category)) {
-        setCategories([...categories, data.category]);
-      }
-      resetForm();
+    if (error) return setError(error.message);
+    setPhotos([data as Photo, ...photos]);
+    if (data?.category && !categories.includes(data.category)) {
+      setCategories([...categories, data.category]);
     }
+    resetForm();
   };
 
   const handleDeletePhoto = async (id: string) => {
-    setError(null);
     const { error } = await supabase.from("photos").delete().eq("id", id);
-    if (error) {
-      setError("Failed to delete photo: " + error.message);
-      console.error("Delete photo error:", error);
-    } else {
-      setPhotos(photos.filter(p => p.id !== id));
-    }
+    if (error) return setError(error.message);
+    setPhotos(photos.filter(p => p.id !== id));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,23 +150,16 @@ export default function PhotoGalleryPage() {
     setError(null);
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!userId) {
+  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (!userId)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="mb-4">You must be logged in to see your photo gallery.</p>
         <button onClick={() => window.location.reload()} className="px-4 py-2 bg-black text-white rounded-sm">Refresh</button>
       </div>
     );
-  }
 
-  const filteredPhotos =
-    selectedCategory === "All"
-      ? photos
-      : photos.filter(p => p.category === selectedCategory);
+  const filteredPhotos = selectedCategory === "All" ? photos : photos.filter(p => p.category === selectedCategory);
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-black">
@@ -222,11 +178,7 @@ export default function PhotoGalleryPage() {
               </p>
             </div>
 
-            {error && (
-              <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">{error}</div>}
 
             {/* Categories */}
             <GalleryCategories
@@ -247,7 +199,7 @@ export default function PhotoGalleryPage() {
 
             {showAddPhoto && (
               <form onSubmit={handleAddPhoto} className="mb-8 p-6 border-2 border-black rounded-sm bg-gray-50">
-                {/* Form fields remain unchanged */}
+                {/* URL/File selection, Title, Category fields */}
                 <div className="mb-6 flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -340,24 +292,12 @@ export default function PhotoGalleryPage() {
             {filteredPhotos.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPhotos.map(photo => (
-                  <div key={photo.id} className="border border-black/10 rounded-sm overflow-hidden hover:border-black transition-colors group cursor-pointer">
-                    <div className="relative overflow-hidden bg-gray-100 h-64" onClick={() => setEnlargedPhoto(photo)}>
-                      <img
-                        src={photo.url}
-                        alt={photo.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3C/svg%3E"}
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-2 line-clamp-2">{photo.title}</h3>
-                      {photo.category && <p className="text-xs text-gray-500 mb-2">Category: {photo.category}</p>}
-                      <p className="text-xs text-gray-500 mb-4">{new Date(photo.uploaded_at).toLocaleDateString()}</p>
-                      <button onClick={() => handleDeletePhoto(photo.id)} className="w-full p-2 hover:bg-red-100 rounded-sm transition-colors text-red-600 font-medium text-sm flex items-center justify-center gap-2">
-                        <Trash2 className="w-4 h-4" strokeWidth={2} /> Delete
-                      </button>
-                    </div>
-                  </div>
+                  <PhotoCard
+                    key={photo.id}
+                    photo={photo}
+                    onDelete={handleDeletePhoto}
+                    onClick={setEnlargedPhoto}
+                  />
                 ))}
               </div>
             ) : (
@@ -374,7 +314,6 @@ export default function PhotoGalleryPage() {
                 <img src={enlargedPhoto.url} alt={enlargedPhoto.title} className="max-h-full max-w-full object-contain" />
               </div>
             )}
-
           </div>
         </main>
       </div>

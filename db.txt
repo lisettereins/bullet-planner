@@ -70,3 +70,22 @@ create trigger set_updated_at
 before update on profiles
 for each row
 execute function update_updated_at_column();
+
+
+
+-- Tabel listide jaoks (iga list kuulub konkreetsele kasutajale)
+create table if not exists lists (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users(id) on delete cascade,
+    name text not null,
+    created_at timestamp with time zone default now()
+);
+
+-- Tabel itemite jaoks
+create table if not exists items (
+    id bigint generated always as identity primary key,
+    list_id bigint not null references lists(id) on delete cascade,
+    title text not null,
+    created_at timestamp with time zone default now()
+);
+

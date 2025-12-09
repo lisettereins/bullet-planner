@@ -40,3 +40,236 @@ create table "public"."events" (
     "created_at" timestamp with time zone default now(),
     "user_id" uuid not null references auth.users(id)
     );
+
+
+
+
+    -- Create 'profiles' table
+create table if not exists profiles (
+    id uuid references auth.users(id) on delete cascade,
+    name text not null,
+    bio text,
+    avatar text,
+    created_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null,
+    primary key (id)
+);
+
+-- Trigger function to update 'updated_at' on row change
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- Attach trigger to 'profiles' table
+drop trigger if exists set_updated_at on profiles;
+create trigger set_updated_at
+before update on profiles
+for each row
+execute function update_updated_at_column();
+
+
+
+-- =============================================
+-- CREATE TABLES
+-- =============================================
+
+-- Lists table
+create table if not exists lists (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users(id) on delete cascade,
+    name text not null,
+    created_at timestamp with time zone default now()
+);
+
+-- Items table
+create table if not exists items (
+    id bigint generated always as identity primary key,
+    list_id bigint not null references lists(id) on delete cascade,
+    title text not null,
+    done boolean default false,
+    created_at timestamp with time zone default now()
+);
+
+-- =============================================
+-- ENABLE ROW LEVEL SECURITY
+-- =============================================
+
+alter table lists enable row level security;
+alter table items enable row level security;
+
+-- =============================================
+-- LISTS POLICIES
+-- =============================================
+
+-- SELECT
+create policy "Users can read their own lists"
+on lists
+for select
+to authenticated
+using (user_id = auth.uid());
+
+-- INSERT
+create policy "Users can insert their own lists"
+on lists
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+-- UPDATE
+create policy "Users can update their own lists"
+on lists
+for update
+to authenticated
+using (user_id = auth.uid());
+
+-- DELETE
+create policy "Users can delete their own lists"
+on lists
+for delete
+to authenticated
+using (user_id = auth.uid());
+
+-- =============================================
+-- ITEMS POLICIES
+-- =============================================
+
+-- SELECT
+create policy "Users can read items of their lists"
+on items
+for select
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- INSERT
+create policy "Users can insert items into their lists"
+on items
+for insert
+to authenticated
+with check (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- UPDATE
+create policy "Users can update items of their lists"
+on items
+for update
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+-- DELETE
+create policy "Users can delete items of their lists"
+on items
+for delete
+to authenticated
+using (
+    exists (
+        select 1 from lists
+        where lists.id = items.list_id
+        and lists.user_id = auth.uid()
+    )
+);
+
+
+
+-- Enable RLS on the database (if not already enabled globally)
+ALTER DATABASE postgres SET row_security = on;
+
+--  Create the photos table (or modify if exists)
+CREATE TABLE IF NOT EXISTS public.photos (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,          -- Unique ID
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,  -- Linked to Supabase auth user
+  url text NOT NULL,                                      -- Image URL
+  title text,                                             -- Image title
+  category text DEFAULT NULL,                             -- Image category
+  uploaded_at timestamp with time zone DEFAULT now()      -- Upload timestamp
+);
+
+--  Enable RLS on the photos table
+ALTER TABLE public.photos ENABLE ROW LEVEL SECURITY;
+
+--  RLS Policies for the photos table
+-- Delete existing policies if they exist
+DROP POLICY IF EXISTS "Users can select their photos" ON public.photos;
+DROP POLICY IF EXISTS "Users can insert their photos" ON public.photos;
+DROP POLICY IF EXISTS "Users can update their photos" ON public.photos;
+DROP POLICY IF EXISTS "Users can delete their photos" ON public.photos;
+
+-- Policy for selecting (reading) own photos
+CREATE POLICY "Users can select their photos" 
+ON public.photos
+FOR SELECT USING (user_id = auth.uid());
+
+-- Policy for inserting (adding) own photos
+CREATE POLICY "Users can insert their photos" 
+ON public.photos
+FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- Policy for updating own photos
+CREATE POLICY "Users can update their photos" 
+ON public.photos
+FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- Policy for deleting own photos
+CREATE POLICY "Users can delete their photos" 
+ON public.photos
+FOR DELETE USING (user_id = auth.uid());
+
+--  Grant permissions to authenticated users for the photos table
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.photos TO authenticated;
+
+--  Create the storage bucket for photos (if not done via dashboard)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('photos', 'photos', true)
+ON CONFLICT (id) DO NOTHING;
+
+--  Storage Policies for the photos bucket
+-- Policy for uploading files to own folder (e.g., userId/category/file.jpg)
+DROP POLICY IF EXISTS "Users can upload their own files" ON storage.objects;
+CREATE POLICY "Users can upload their own files" ON storage.objects
+FOR INSERT WITH CHECK (
+  bucket_id = 'photos' AND
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Policy for reading (selecting) files from own folder
+DROP POLICY IF EXISTS "Users can read their own files" ON storage.objects;
+CREATE POLICY "Users can read their own files" ON storage.objects
+FOR SELECT USING (
+  bucket_id = 'photos' AND
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Policy for deleting files from own folder
+DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
+CREATE POLICY "Users can delete their own files" ON storage.objects
+FOR DELETE USING (
+  bucket_id = 'photos' AND
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+--  Grant permissions to authenticated users for storage
+GRANT ALL ON storage.objects TO authenticated;
+GRANT ALL ON storage.buckets TO authenticated;

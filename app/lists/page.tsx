@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Plus, ListChecks, Trash2 } from "lucide-react";
+import { Plus, ListChecks } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
+import { createClient } from "@/lib/supabase/client";
 import ListItem from "@/components/ui/list/ListItem";
 import NewListForm from "@/components/ui/list/NewListForm";
-import { createClient } from "@/lib/supabase/client";
+import TodoList from "@/components/ui/list/TodoList";
 
 const supabase = createClient();
 
@@ -18,7 +19,7 @@ export interface Item {
   created_at?: string;
 }
 
-export interface TodoList {
+export interface TodoListType {
   id: number;
   name: string;
   items: Item[];
@@ -26,14 +27,12 @@ export interface TodoList {
 }
 
 export default function ListsPage() {
-  const [lists, setLists] = useState<TodoList[]>([]);
+  const [lists, setLists] = useState<TodoListType[]>([]);
   const [showNewList, setShowNewList] = useState(false);
-  const [newItemsByList, setNewItemsByList] = useState<Record<number, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [expandedLists, setExpandedLists] = useState<Record<number, boolean>>({});
 
-  // 1️⃣ Lae kasutaja ja listid
+  // Lae kasutaja ja listid
   useEffect(() => {
     let mounted = true;
 
@@ -64,7 +63,7 @@ export default function ListsPage() {
     };
   }, []);
 
-  // 2️⃣ Lae listid ja itemid
+  //  Lae listid ja itemid
   const fetchLists = async (uid: string) => {
     if (!uid) return;
     setLoading(true);
@@ -107,7 +106,7 @@ export default function ListsPage() {
     }
   };
 
-  // 3️⃣ Listide CRUD
+  //  Listide CRUD funktsioonid
   const handleCreateList = async (name: string) => {
     if (!name.trim() || !userId) return;
     try {
@@ -202,74 +201,21 @@ export default function ListsPage() {
             )}
 
             {showNewList && (
-              <NewListForm
-                onCreate={handleCreateList}
-                onCancel={() => setShowNewList(false)}
-              />
+              <NewListForm onCreate={handleCreateList} onCancel={() => setShowNewList(false)} />
             )}
 
             {loading ? (
               <p>Loading…</p>
             ) : lists.length > 0 ? (
               lists.map(list => (
-                <div key={list.id} className="border border-black/10 rounded-sm p-6 space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2
-                      className="text-2xl font-bold cursor-pointer"
-                      onClick={() => setExpandedLists(prev => ({ ...prev, [list.id]: !prev[list.id] }))}
-                    >
-                      {list.name}
-                    </h2>
-                    <button
-                      onClick={() => handleDeleteList(list.id)}
-                      className="p-2 hover:bg-red-100 rounded-sm text-red-600"
-                    >
-                      <Trash2 className="w-5 h-5" strokeWidth={2} />
-                    </button>
-                  </div>
-
-                  {expandedLists[list.id] && (
-                    <>
-                      {list.items.length > 0 ? (
-                        <ul className="space-y-2">
-                          {list.items.map(item => (
-                            <ListItem
-                              key={item.id}
-                              item={item}
-                              onToggle={() => handleToggleDone(list.id, item)}
-                              onDelete={() => handleDeleteItem(list.id, item.id)}
-                            />
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-500 text-center py-4">No items yet.</p>
-                      )}
-
-                      <form
-                        onSubmit={e => {
-                          e.preventDefault();
-                          handleAddItem(list.id, newItemsByList[list.id] || "");
-                          setNewItemsByList({ ...newItemsByList, [list.id]: "" });
-                        }}
-                        className="mb-4 flex gap-2"
-                      >
-                        <input
-                          type="text"
-                          value={newItemsByList[list.id] || ""}
-                          onChange={e => setNewItemsByList({ ...newItemsByList, [list.id]: e.target.value })}
-                          className="flex-1 px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black"
-                          placeholder="Add item..."
-                        />
-                        <button
-                          type="submit"
-                          className="bg-black text-white px-4 py-2 rounded-sm font-semibold hover:bg-gray-900 flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" strokeWidth={2} /> Add
-                        </button>
-                      </form>
-                    </>
-                  )}
-                </div>
+                <TodoList
+                  key={list.id}
+                  list={list}
+                  onDeleteList={handleDeleteList}
+                  onAddItem={handleAddItem}
+                  onDeleteItem={handleDeleteItem}
+                  onToggleItem={handleToggleDone}
+                />
               ))
             ) : (
               <div className="text-center py-12 border-2 border-dashed border-black/20 rounded-sm">

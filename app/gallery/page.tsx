@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Image as ImageIcon, ArrowLeft, BookOpen } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +10,7 @@ const supabase = createClient();
 
 interface Photo {
   id: string;
+  user_id: string;
   url: string;
   title: string;
   uploaded_at: string;
@@ -24,99 +25,137 @@ export default function PhotoGalleryPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [uploadMethod, setUploadMethod] = useState<"url" | "file">("url");
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // Added for user feedback
 
+  // Lae kasutaja ja fotod
   useEffect(() => {
     let mounted = true;
+
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || !mounted) return;
-      setUserId(session.user.id);
-      await fetchPhotos(session.user.id);
+      try {
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error) {
+          setError("Failed to get session. Please log in.");
+          return console.error("Auth session error:", error);
+        }
+
+        const uid = sessionData?.session?.user?.id ?? null;
+        if (!mounted) return;
+
+        setUserId(uid);
+        if (uid) await fetchPhotos(uid);
+      } catch (err) {
+        setError("Initialization failed. Please try again.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
+
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUserId(session.user.id);
-        fetchPhotos(session.user.id);
-      } else {
-        setUserId(null);
-        setPhotos([]);
-      }
+      const uid = session?.user?.id ?? null;
+      setUserId(uid);
+      if (uid) fetchPhotos(uid);
+      else setPhotos([]);
     });
 
     return () => {
       mounted = false;
-      try {
-        (listener as any)?.subscription?.unsubscribe?.();
-        (listener as any)?.unsubscribe?.();
-      } catch {}
+      listener.subscription?.unsubscribe?.();
     };
   }, []);
 
   const fetchPhotos = async (uid: string) => {
+    setError(null); // Clear previous errors
     const { data, error } = await supabase
       .from("photos")
       .select("*")
       .eq("user_id", uid)
       .order("uploaded_at", { ascending: false });
 
-    if (error) console.error("Fetch photos error:", error);
-    else setPhotos(data || []);
+    if (error) {
+      setError("Failed to load photos. Please refresh.");
+      console.error("Fetch photos error:", error);
+    } else {
+      setPhotos(data || []);
+    }
   };
 
   const handleAddPhoto = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    setError(null); // Clear errors
+
+    if (!userId) {
+      setError("You must be logged in to upload photos.");
+      return;
+    }
 
     let photoUrl = imageUrl;
 
     if (uploadMethod === "file") {
-      if (!selectedFile) return alert("Please select a file");
+      if (!selectedFile) {
+        setError("Please select a file.");
+        return;
+      }
 
-      // Supabase storage upload
-      const fileExt = selectedFile.name.split(".").pop();
+      const fileExt = selectedFile.name.split(".").pop() || "jpg";
       const fileName = `${Date.now()}.${fileExt}`;
-      const { data, error } = await supabase.storage
+      const filePath = `${userId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
         .from("photos")
-        .upload(`${userId}/${fileName}`, selectedFile);
+        .upload(filePath, selectedFile);
 
-      if (error) return alert("Upload error: " + error.message);
+      if (uploadError) {
+        setError("Upload failed: " + uploadError.message);
+        console.error("Upload error:", uploadError);
+        return;
+      }
 
-      const { publicUrl } = supabase
-        .storage
-        .from("photos")
-        .getPublicUrl(`${userId}/${fileName}`);
+      const { data } = supabase.storage.from("photos").getPublicUrl(filePath);
+      if (!data?.publicUrl) {
+        setError("Failed to get public URL for uploaded file.");
+        return;
+      }
 
-      photoUrl = publicUrl;
+      photoUrl = data.publicUrl;
     }
 
+    // Insert only if userId exists
+    console.log("Inserting photo with userId:", userId);
     const { data, error } = await supabase
       .from("photos")
       .insert({ user_id: userId, url: photoUrl, title: imageTitle || "Untitled" })
       .select()
       .single();
 
-    if (error) console.error("Insert photo error:", error);
-    else setPhotos([data as Photo, ...photos]);
-
-    setImageUrl("");
-    setImageTitle("");
-    setSelectedFile(null);
-    setPreviewUrl("");
-    setShowAddPhoto(false);
+    if (error) {
+      setError("Failed to save photo: " + error.message);
+      console.error("Insert photo error:", error);
+    } else {
+      setPhotos([data as Photo, ...photos]);
+      resetForm();
+    }
   };
 
   const handleDeletePhoto = async (id: string) => {
+    setError(null);
     const { error } = await supabase.from("photos").delete().eq("id", id);
-    if (error) console.error("Delete photo error:", error);
-    else setPhotos(photos.filter((p) => p.id !== id));
+    if (error) {
+      setError("Failed to delete photo: " + error.message);
+      console.error("Delete photo error:", error);
+    } else {
+      setPhotos(photos.filter(p => p.id !== id));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0] ?? null;
     setSelectedFile(file);
+    if (!file) return setPreviewUrl("");
     const reader = new FileReader();
     reader.onloadend = () => setPreviewUrl(reader.result as string);
     reader.readAsDataURL(file);
@@ -129,7 +168,21 @@ export default function PhotoGalleryPage() {
     setSelectedFile(null);
     setPreviewUrl("");
     setUploadMethod("url");
+    setError(null); // Clear errors on reset
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!userId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="mb-4">You must be logged in to see your photo gallery.</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-black text-white rounded-sm">Refresh</button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-black">
@@ -138,7 +191,6 @@ export default function PhotoGalleryPage() {
         <DashboardSidebar />
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-6xl mx-auto p-4 sm:p-8 py-12">
-            {/* Page header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
                 <ImageIcon className="w-8 h-8" strokeWidth={2} />
@@ -149,18 +201,21 @@ export default function PhotoGalleryPage() {
               </p>
             </div>
 
-            {/* Add Photo Button */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
+                {error}
+              </div>
+            )}
+
             {!showAddPhoto && (
               <button
                 onClick={() => setShowAddPhoto(true)}
                 className="mb-8 w-full sm:w-auto flex items-center gap-2 bg-black text-white px-6 py-3 rounded-sm font-semibold hover:bg-gray-900 transition-colors"
               >
-                <Plus className="w-5 h-5" strokeWidth={2} />
-                Add Photo
+                <Plus className="w-5 h-5" strokeWidth={2} /> Add Photo
               </button>
             )}
 
-            {/* Add Photo Form */}
             {showAddPhoto && (
               <form onSubmit={handleAddPhoto} className="mb-8 p-6 border-2 border-black rounded-sm bg-gray-50">
                 <div className="mb-6 flex gap-4">
@@ -192,7 +247,7 @@ export default function PhotoGalleryPage() {
                     <input
                       type="url"
                       id="image-url"
-                      value={imageUrl}
+                      value={imageUrl || ""}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="https://example.com/image.jpg"
                       className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black"
@@ -210,7 +265,11 @@ export default function PhotoGalleryPage() {
                       className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black"
                       required
                     />
-                    {previewUrl && <div className="mt-4 rounded-sm overflow-hidden border border-black/10"><img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover" /></div>}
+                    {previewUrl && (
+                      <div className="mt-4 rounded-sm overflow-hidden border border-black/10">
+                        <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover" />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -219,7 +278,7 @@ export default function PhotoGalleryPage() {
                   <input
                     type="text"
                     id="image-title"
-                    value={imageTitle}
+                    value={imageTitle || ""}
                     onChange={(e) => setImageTitle(e.target.value)}
                     placeholder="Photo title"
                     className="w-full px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black"
@@ -233,10 +292,9 @@ export default function PhotoGalleryPage() {
               </form>
             )}
 
-            {/* Photo Gallery Grid */}
             {photos.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {photos.map((photo) => (
+                {photos.map(photo => (
                   <div key={photo.id} className="border border-black/10 rounded-sm overflow-hidden hover:border-black transition-colors group">
                     <div className="relative overflow-hidden bg-gray-100 h-64">
                       <img

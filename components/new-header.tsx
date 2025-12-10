@@ -28,7 +28,7 @@ export default function NewHeader() {
 
   return (
     <header className="border-b border-black/10 p-4 flex justify-between items-center">
-      <Link href="dashboard" className="flex items-center gap-2 font-bold text-lg">
+      <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
         <div className="border-2 border-black rounded-sm p-2">
           <BookOpen className="w-5 h-5" strokeWidth={1.5} />
         </div>

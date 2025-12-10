@@ -20,13 +20,12 @@ export async function createHabit(name: string, description?: string) {
   return { success: true };
 }
 
-export async function habitDone(habitId: string, done: boolean) {
+export async function habitDone(habitId: string, done: boolean, date: string) {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from('habits')
-    .update({ done })
-    .eq('id', habitId);
+    .from('habit_logs')
+    .insert({ habit_id: habitId, done, date });
   if (error) {
     throw new Error('toggle done failed');
   }

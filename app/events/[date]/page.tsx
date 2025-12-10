@@ -3,6 +3,7 @@ import EventPage from '@/components/event-page';
 import NewHeader from '@/components/new-header';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import { createClient } from '@/lib/supabase/server';
+import { Calendar } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 export default async function Page({ params }: { params: { date: string } }) {
@@ -35,7 +36,11 @@ export default async function Page({ params }: { params: { date: string } }) {
       <div className="flex flex-1">
         <DashboardSidebar />
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 ">
+            <Calendar className="w-8 h-8" strokeWidth={2} />
+            <h1 className="text-4xl font-bold">Events</h1>
+          </div>
+          <div className="max-w-4xl mx-auto mt-6">
             <EventPage selectedDate={date} />
             <div className="flex flex-1 flex-col gap-3">
               {events?.length === 0 ? (

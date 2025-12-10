@@ -4,6 +4,7 @@ import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import AddTaskForm from '@/components/ui/tasks/AddTaskForm';
 import TaskItem from '@/components/ui/tasks/TaskItem';
 import { createClient } from '@/lib/supabase/server';
+import { CheckSquare } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 export default async function DailyTasksPage({
@@ -33,8 +34,12 @@ export default async function DailyTasksPage({
       <div className="flex flex-1">
         <DashboardSidebar />
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
-            <NewDatePicker selectedDate={date} param = "daily-tasks" />
+          <div className="flex items-center gap-3 ">
+            <CheckSquare className="w-8 h-8" strokeWidth={2} />
+            <h1 className="text-4xl font-bold">Daily Tasks</h1>
+          </div>
+          <div className="max-w-4xl mx-auto mt-6">
+            <NewDatePicker selectedDate={date} param="daily-tasks" />
             <AddTaskForm date={date} />
             <TaskItem tasks={tasks} />
           </div>

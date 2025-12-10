@@ -273,3 +273,43 @@ FOR DELETE USING (
 --  Grant permissions to authenticated users for storage
 GRANT ALL ON storage.objects TO authenticated;
 GRANT ALL ON storage.buckets TO authenticated;
+
+
+
+-- ------------------------------------------------------
+-- Funktsioon: update_updated_at_column
+-- ------------------------------------------------------
+-- Loob funktsiooni ainult, kui see veel puudub
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS trigger AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ------------------------------------------------------
+-- Tabel: goals
+-- ------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.goals (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title text NOT NULL,
+    description text,
+    completed boolean DEFAULT false,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    due_date date
+);
+
+-- ------------------------------------------------------
+-- Trigger: goals updated_at
+-- ------------------------------------------------------
+-- Eemalda vana trigger, kui see olemas on (võimaldab uuesti käivitada)
+DROP TRIGGER IF EXISTS update_goals_updated_at ON public.goals;
+
+CREATE TRIGGER update_goals_updated_at
+BEFORE UPDATE ON public.goals
+FOR EACH ROW
+EXECUTE FUNCTION public.update_updated_at_column();
+

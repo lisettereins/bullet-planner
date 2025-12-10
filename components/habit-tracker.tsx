@@ -3,7 +3,6 @@
 import { habitDone } from '@/app/habits/action';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 type Habit = {
   id: string;
@@ -24,7 +23,7 @@ interface HabitItemProps {
 }
 
 export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
-  const [done, setDone] = useState(false);
+
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const router = useRouter();
 
@@ -41,11 +40,12 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
   const handleToggle = async (
     e: React.FormEvent,
     habit: Habit,
-    date: string
+    date: string,
+    done: boolean
   ) => {
     e.preventDefault();
-    setDone(true);
-    await habitDone(habit.id, done, date);
+    const newDone = !done;
+    await habitDone(habit.id, newDone, date);
     router.refresh();
   };
 
@@ -93,7 +93,7 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
                 >
                   <button
                     className="w-full h-full flex items-center justify-center text-lg"
-                    onClick={(e) => handleToggle(e, habit, day)}
+                    onClick={(e) => handleToggle(e, habit, day, done)}
                   >
                     {done ? (
                       <CheckCircle2 className="w-5 h-5" />

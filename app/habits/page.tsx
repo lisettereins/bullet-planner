@@ -1,3 +1,4 @@
+import DeleteHabitBtn from '@/components/del-habit-btn';
 import NewHabitsForm from '@/components/new-habits-form';
 import NewHeader from '@/components/new-header';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
@@ -50,9 +51,10 @@ export default async function name() {
                   {habits?.map((habit) => (
                     <div
                       key={habit.id}
-                      className="p-2 text-gray-600 text-sm border-b last:border-b-0"
+                      className="flex justify-between items-center p-2 text-gray-600 text-sm border-b last:border-b-0"
                     >
-                      {habit.name}
+                      <span>{habit.name}</span>
+                      <DeleteHabitBtn habitId={habit.id} />
                     </div>
                   ))}
                 </div>

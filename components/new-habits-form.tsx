@@ -60,7 +60,7 @@ export default function NewHabitsForm() {
         </button>
         <button
           type="button"
-          //onClick={() => setShowForm(false)}
+          onClick={() => setShowForm(false)}
           className="flex-1 bg-white border-2 border-black text-black py-2 rounded-sm font-semibold hover:bg-gray-50 transition-colors"
         >
           Cancel

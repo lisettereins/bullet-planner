@@ -7,6 +7,7 @@ import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import GoalItem from "@/components/ui/goals/GoalItem";
 import GoalsHeader from "@/components/ui/goals/GoalsHeader";
 import NewGoalForm from "@/components/ui/goals/NewGoalForm";
+import GoalsList from "@/components/ui/goals/GoalsList";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
@@ -157,41 +158,23 @@ export default function GoalsPage() {
               )}
             </div>
 
-            {/* Active Goals */}
-            {activeGoals.length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold mb-4">Active Goals</h2>
-                <div className="space-y-4">
-                  {activeGoals.map(goal => (
-                    <GoalItem
-                      key={goal.id}
-                      goal={goal}
-                      onToggle={handleToggleGoal}
-                      onDelete={handleDeleteGoal}
-                      formatDate={formatDate}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Active Goals List */}
+            <GoalsList
+              goals={activeGoals}
+              title="Active Goals"
+              onToggle={handleToggleGoal}
+              onDelete={handleDeleteGoal}
+              formatDate={formatDate}
+            />
 
-            {/* Completed Goals */}
-            {completedGoals.length > 0 && (
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold mb-4">Completed Goals</h2>
-                <div className="space-y-4">
-                  {completedGoals.map(goal => (
-                    <GoalItem
-                      key={goal.id}
-                      goal={goal}
-                      onToggle={handleToggleGoal}
-                      onDelete={handleDeleteGoal}
-                      formatDate={formatDate}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Completed Goals List */}
+            <GoalsList
+              goals={completedGoals}
+              title="Completed Goals"
+              onToggle={handleToggleGoal}
+              onDelete={handleDeleteGoal}
+              formatDate={formatDate}
+            />
 
             {/* Empty State */}
             {goals.length === 0 && (

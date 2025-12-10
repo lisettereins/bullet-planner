@@ -56,9 +56,14 @@ export default async function name() {
                   {habits?.map((habit) => (
                     <div
                       key={habit.id}
-                      className="flex justify-between items-center p-2 text-gray-600 text-sm border-b last:border-b-0"
+                      className="flex justify-between items-center p-2  border-b last:border-b-0"
                     >
-                      <span>{habit.name}</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{habit.name}</span>
+                        <span className="text-gray-600 text-sm">
+                          {habit.description}
+                        </span>
+                      </div>
                       <DeleteHabitBtn habitId={habit.id} />
                     </div>
                   ))}

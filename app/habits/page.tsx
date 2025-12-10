@@ -38,28 +38,25 @@ export default async function name() {
             <NewHabitsForm />
           </div>
 
-          <div className="flex gap-6">
-            <aside className="w-64 flex flex-col border-2 border-black rounded-sm bg-gray-20 p-4 overflow-y-auto">
-              <h2 className="text-center font-semibold mb-2">Habit List</h2>
-
-              {habits?.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-center text-gray-600 text-sm">
-                  No habits
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {habits?.map((habit) => (
-                    <div
-                      key={habit.id}
-                      className="flex justify-between items-center p-2 text-gray-600 text-sm border-b last:border-b-0"
-                    >
-                      <span>{habit.name}</span>
-                      <DeleteHabitBtn habitId={habit.id} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </aside>
+          <div className="flex flex-1 flex-col gap-3">
+            {habits?.length === 0 ? (
+              <div className="text-center py-12 border-2 border-dashed border-black/20 rounded-sm">
+                <p className="text-gray-600 mb-4">No habits to track</p>
+              </div>
+            ) : (
+              <aside className="w-64 flex flex-col border-2 border-black rounded-sm bg-gray-20 p-4 overflow-y-auto">
+                <h2 className="text-center font-semibold mb-2">Habit List</h2>
+                {habits?.map((habit) => (
+                  <div
+                    key={habit.id}
+                    className="flex justify-between items-center p-2 text-gray-600 text-sm border-b last:border-b-0"
+                  >
+                    <span>{habit.name}</span>
+                    <DeleteHabitBtn habitId={habit.id} />
+                  </div>
+                ))}
+              </aside>
+            )}
           </div>
         </main>
       </div>

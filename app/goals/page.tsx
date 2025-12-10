@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 import GoalItem from "@/components/ui/goals/GoalItem";
 import GoalsHeader from "@/components/ui/goals/GoalsHeader";
+import NewGoalForm from "@/components/ui/goals/NewGoalForm";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
@@ -143,49 +144,16 @@ export default function GoalsPage() {
                 </button>
               )}
               {showNewGoal && (
-                <form
-                  onSubmit={handleAddGoal}
-                  className="mb-8 p-6 border-2 border-black rounded-sm bg-gray-50"
-                >
-                  <input
-                    type="text"
-                    value={newGoalTitle}
-                    onChange={(e) => setNewGoalTitle(e.target.value)}
-                    placeholder="Goal title"
-                    className="w-full mb-4 px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black text-lg font-semibold"
-                    autoFocus
-                    required
-                  />
-                  <textarea
-                    value={newGoalDescription}
-                    onChange={(e) => setNewGoalDescription(e.target.value)}
-                    placeholder="Description (optional)"
-                    rows={3}
-                    className="w-full mb-4 px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black resize-none"
-                  />
-                  <div>
-                    <label htmlFor="due-date" className="block text-sm font-medium mb-2">
-                      Due Date (optional)
-                    </label>
-                    <input
-                      type="date"
-                      id="due-date"
-                      value={newGoalDueDate}
-                      onChange={(e) => setNewGoalDueDate(e.target.value)}
-                      className="w-full mb-4 px-4 py-2 border border-black/20 rounded-sm focus:outline-none focus:border-black"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="flex-1 bg-black text-white py-2 rounded-sm font-semibold hover:bg-gray-900 transition-colors">Add Goal</button>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewGoal(false)}
-                      className="flex-1 bg-white border-2 border-black text-black py-2 rounded-sm font-semibold hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
+                <NewGoalForm
+                  title={newGoalTitle}
+                  description={newGoalDescription}
+                  dueDate={newGoalDueDate}
+                  onTitleChange={setNewGoalTitle}
+                  onDescriptionChange={setNewGoalDescription}
+                  onDueDateChange={setNewGoalDueDate}
+                  onAddGoal={handleAddGoal}
+                  onCancel={() => setShowNewGoal(false)}
+                />
               )}
             </div>
 

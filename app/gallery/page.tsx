@@ -208,7 +208,7 @@ export default function PhotoGalleryPage() {
                     key={photo.id}
                     photo={photo}
                     onDelete={handleDeletePhoto}
-                    onClick={(p) => setEnlargedPhoto(p)}
+                    onClick={() => setEnlargedPhoto(photo)}
                   />
                 ))}
               </div>

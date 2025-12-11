@@ -1,39 +1,39 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function MiniCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+interface MiniCalendarProps {
+  currentDate: Date;
+  onSelectDate: (date: Date) => void;
+}
 
+export default function MiniCalendar({ currentDate, onSelectDate }: MiniCalendarProps) {
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
   const today = new Date();
-  const todayStr = today.toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const todayStr = today.toISOString().split("T")[0];
 
   const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+
   const firstDayOfMonth = (date: Date) => {
     const d = new Date(date.getFullYear(), date.getMonth(), 1);
-    // teisenda nii, et esmaspäev = 0
-    return (d.getDay() + 6) % 7;
+    return (d.getDay() + 6) % 7; // esmaspäev = 0
   };
 
   const handlePrevMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() - 1);
-    setCurrentDate(newDate);
+    onSelectDate(newDate);
   };
 
   const handleNextMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() + 1);
-    setCurrentDate(newDate);
+    onSelectDate(newDate);
   };
 
   const renderDays = () => {
     const totalDays = daysInMonth(currentDate);
     const firstDay = firstDayOfMonth(currentDate);
-
     const daysArray: (Date | null)[] = Array(firstDay).fill(null);
 
     for (let i = 1; i <= totalDays; i++) {
@@ -43,18 +43,19 @@ export default function MiniCalendar() {
     return daysArray.map((day, idx) => {
       if (!day) return <div key={idx} className="p-1"></div>;
 
-      const dateStr = day.toLocaleDateString("en-CA");
+      const dateStr = day.toISOString().split("T")[0];
       const isToday = dateStr === todayStr;
 
       return (
-        <div
+        <button
           key={idx}
+          onClick={() => onSelectDate(day)}
           className={`text-center text-xs p-1 rounded-sm min-h-[24px] flex items-center justify-center ${
             isToday ? "bg-black text-white font-bold" : "bg-white text-gray-800"
-          }`}
+          } hover:bg-gray-200`}
         >
           {day.getDate()}
-        </div>
+        </button>
       );
     });
   };

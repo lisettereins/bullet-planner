@@ -9,7 +9,7 @@ export default function MonthView({ selectedDate }: MonthViewProps) {
   const firstDay = getFirstDayOfMonth(selectedDate);
 
   // Täida esimesed tühjad päevad
-  const days = Array(firstDay).fill(null);
+  const days: (Date | null)[] = Array(firstDay).fill(null);
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), i));
   }
@@ -20,10 +20,7 @@ export default function MonthView({ selectedDate }: MonthViewProps) {
     <div>
       <div className="grid grid-cols-7 gap-2 mb-2">
         {WEEKDAYS.map((d) => (
-          <div
-            key={d}
-            className="text-center font-semibold text-sm p-2 text-gray-600"
-          >
+          <div key={d} className="text-center font-semibold text-sm p-2 text-gray-600">
             {d}
           </div>
         ))}
@@ -33,7 +30,7 @@ export default function MonthView({ selectedDate }: MonthViewProps) {
         {days.map((day, idx) =>
           day ? (
             <div
-              key={idx}
+              key={day.toISOString()}
               className={`p-2 border rounded min-h-[80px] bg-white ${
                 day.toISOString().split("T")[0] === todayStr
                   ? "border-black border-2"
@@ -43,7 +40,7 @@ export default function MonthView({ selectedDate }: MonthViewProps) {
               <p className="font-semibold text-sm">{day.getDate()}</p>
             </div>
           ) : (
-            <div key={idx}></div>
+            <div key={`empty-${idx}`} className="p-2 border-transparent min-h-[80px]"></div>
           )
         )}
       </div>

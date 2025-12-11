@@ -1,42 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-
-import DashboardHeader from "@/components/ui/DashboardHeader";
+import NewHeader from "@/components/new-header";
 import DashboardSidebar from "@/components/ui/DashboardSidebar";
 
 import DayView from "@/components/ui/calendar/DayView";
 import WeekView from "@/components/ui/calendar/WeekView";
 import MonthView from "@/components/ui/calendar/MonthView";
 
-
 type ViewMode = "day" | "week" | "month";
 
 export default function CalendarPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const supabase = createClient()
-
-  // Lae Supabase sessioon ja email
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error || !data.session) {
-        router.push("/login");
-        return;
-      }
-      setUserEmail(data.session.user.email);
-      setLoading(false);
-    };
-    fetchSession();
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
 
   const handlePrev = () => {
     const d = new Date(selectedDate);
@@ -89,7 +67,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black">
-      <DashboardHeader title="Calendar" userEmail={userEmail!} />
+      <NewHeader /> {/* auth ja user email juba sees */}
 
       <div className="flex flex-1">
         <DashboardSidebar active="calendar" />
@@ -98,10 +76,10 @@ export default function CalendarPage() {
           {/* Top bar */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex gap-2">
-              {["day", "week", "month"].map((mode) => (
+              {(["day", "week", "month"] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setViewMode(mode as ViewMode)}
+                  onClick={() => setViewMode(mode)}
                   className={`px-3 py-1 border rounded ${
                     viewMode === mode
                       ? "bg-black text-white"
@@ -135,9 +113,7 @@ export default function CalendarPage() {
           </div>
 
           {/* Active view */}
-          {viewMode === "day" && (
-            <DayView selectedDate={selectedDate.toISOString().split("T")[0]} />
-          )}
+          {viewMode === "day" && <DayView selectedDate={selectedDate.toISOString().split("T")[0]} />}
           {viewMode === "week" && <WeekView selectedDate={selectedDate} />}
           {viewMode === "month" && <MonthView selectedDate={selectedDate} />}
         </main>

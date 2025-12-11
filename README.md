@@ -18,6 +18,10 @@ Rakendus on loodud **Next.js** ja **Supabase** abil.
 
 Figma prototüüp: [(https://www.figma.com/proto/TLzZZrS3UdwlU8qhXZeNqX/Untitled?node-id=11-269&p=f&t=2vvcOJrx5OzHvozd-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1)]
 
+## Live Demo
+
+Saad proovida rakendust siin: [Bullet Planner Live](bullet-planner.vercel.app)
+
 ## Liikmed
 
-Lisett-Marleen Foster, Lisette Reins, Karl Rebane
+Lisett-Marleen Foster, Lisette Reins

@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+// import { useState } from "react";
 import { ArrowRight, BookOpen, Calendar, ListChecks, FileText, Image as ImageIcon } from "lucide-react";
 
 export default function Page() {
-  const [isScrolled, setIsScrolled] = useState(false);
+  // const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollY = e.currentTarget.scrollLeft;
-    setIsScrolled(scrollY > 0);
-  };
+  // const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  //   const scrollY = e.currentTarget.scrollLeft;
+  //   setIsScrolled(scrollY > 0);
+  // };
 
   return (
     <div className="min-h-screen bg-white text-black overflow-x-hidden">

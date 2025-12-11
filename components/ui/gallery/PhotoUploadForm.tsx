@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
@@ -23,7 +23,7 @@ interface PhotoUploadFormProps {
 
 const PhotoUploadForm: React.FC<PhotoUploadFormProps> = ({
   userId,
-  categories,
+  // categories,
   onUpload,
   onCancel,
 }) => {

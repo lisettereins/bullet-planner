@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/supabaseClient";
 import CalendarEntry from "./CalendarEntry";
 
-interface CalendarEntryType {
+export interface CalendarEntryType {
   id: string;
   title: string;
   content?: string;
@@ -19,11 +19,6 @@ interface DayViewProps {
 
 export default function DayView({ selectedDate }: DayViewProps) {
   const [entries, setEntries] = useState<CalendarEntryType[]>([]);
-  const [formPosition, setFormPosition] = useState<number | null>(null);
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [newStartTime, setNewStartTime] = useState("06:00");
-  const [newEndTime, setNewEndTime] = useState("07:00");
 
   // ---- Load entries from Supabase ----
   useEffect(() => {
@@ -35,15 +30,14 @@ export default function DayView({ selectedDate }: DayViewProps) {
         .order("start_time", { ascending: true });
 
       if (data) {
-        // Tagame, et kõik ajad oleks HH:MM 24h formaadis
         setEntries(
           data.map((d) => ({
-            id: d.id.toString(),
+            id: String(d.id),
             title: d.title,
-            content: d.content,
+            content: d.content ?? "",
             date: d.date,
-            startTime: d.start_time.slice(0, 5),
-            endTime: d.end_time.slice(0, 5),
+            startTime: (d.start_time ?? "00:00").slice(0, 5),
+            endTime: (d.end_time ?? "00:00").slice(0, 5),
           }))
         );
       }
@@ -52,72 +46,16 @@ export default function DayView({ selectedDate }: DayViewProps) {
     fetchEntries();
   }, [selectedDate]);
 
-  // ---- Save new entry ----
-  const saveEntry = async (entry: CalendarEntryType) => {
-    const { data } = await supabase
-      .from("calendar_entries")
-      .insert([{
-        title: entry.title,
-        content: entry.content,
-        date: entry.date,
-        start_time: entry.startTime,
-        end_time: entry.endTime,
-      }])
-      .select("*");
-
-    if (!data || !data[0]) return null;
-
-    return {
-      id: data[0].id.toString(),
-      ...entry,
-    };
-  };
-
-  const handleAddEntry = async () => {
-    if (!newTitle.trim()) return;
-
-    const draftEntry: CalendarEntryType = {
-      id: Date.now().toString(),
-      title: newTitle.trim(),
-      content: newContent.trim(),
-      date: selectedDate,
-      startTime: newStartTime,
-      endTime: newEndTime,
-    };
-
-    const saved = await saveEntry(draftEntry);
-    if (!saved) return;
-
-    setEntries([...entries, saved]);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setFormPosition(null);
-    setNewTitle("");
-    setNewContent("");
-    setNewStartTime("06:00");
-    setNewEndTime("07:00");
-  };
-
   const handleDelete = async (id: string) => {
-    setEntries(entries.filter((e) => e.id !== id));
+    setEntries((prev) => prev.filter((e) => e.id !== id));
     await supabase.from("calendar_entries").delete().eq("id", id);
   };
 
-  // ---- Päeva tunnid 0–23 ----
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   const getTopPosition = (time: string) => {
     const [h, m] = time.split(":").map(Number);
     return (h + m / 60) * 50; // 50px per hour
-  };
-
-  const handleHourClick = (h: number) => {
-    const hourStr = h.toString().padStart(2, "0") + ":00";
-    setNewStartTime(hourStr);
-    setNewEndTime(hourStr);
-    setFormPosition(getTopPosition(hourStr) + 2);
   };
 
   return (
@@ -135,92 +73,33 @@ export default function DayView({ selectedDate }: DayViewProps) {
         {hours.map((h) => (
           <div
             key={h}
-            className="absolute left-0 right-0 flex items-center cursor-pointer"
+            className="absolute left-0 right-0 flex items-center"
             style={{ top: h * 50 }}
-            onClick={() => handleHourClick(h)}
           >
-            <span className="w-12 text-xs font-semibold">{h.toString().padStart(2, "0")}:00</span>
+            <span className="w-12 text-xs font-semibold">{String(h).padStart(2, "0")}:00</span>
             <div className="flex-1 ml-2 border-t border-gray-300"></div>
           </div>
         ))}
 
-        {/* REAL EVENTS */}
+        {/* CALENDAR ENTRIES */}
         {entries.map((entry) => {
           const top = getTopPosition(entry.startTime) + 2;
           const bottom = getTopPosition(entry.endTime);
           const height = bottom - top;
 
           return (
-            <div
-              key={entry.id}
-              style={{ top, height }}
-              className="absolute left-12 right-2"
-            >
+            <div key={entry.id} style={{ top, height }} className="absolute left-12 right-2">
               <CalendarEntry
                 id={entry.id}
                 title={entry.title}
                 content={entry.content}
-                startTime={entry.startTime} // 24h formaat
-                endTime={entry.endTime}     // 24h formaat
+                startTime={entry.startTime}
+                endTime={entry.endTime}
                 onDelete={handleDelete}
               />
             </div>
           );
         })}
-
-        {/* FORM */}
-        {formPosition !== null && (
-          <div
-            className="absolute left-0 right-0 p-4 bg-gray-50 border-2 border-black rounded-sm"
-            style={{ top: formPosition }}
-          >
-            <input
-              type="text"
-              autoFocus
-              placeholder="Title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full mb-2 px-3 py-2 border border-black/20 rounded-sm"
-            />
-
-            <textarea
-              placeholder="Content"
-              value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
-              className="w-full mb-2 px-3 py-2 border border-black/20 rounded-sm resize-none"
-            />
-
-            <div className="flex gap-2 mb-2">
-              <input
-                type="time"
-                value={newStartTime}
-                onChange={(e) => setNewStartTime(e.target.value)}
-                className="flex-1 px-3 py-2 border border-black/20 rounded-sm"
-              />
-              <input
-                type="time"
-                value={newEndTime}
-                onChange={(e) => setNewEndTime(e.target.value)}
-                className="flex-1 px-3 py-2 border border-black/20 rounded-sm"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddEntry}
-                className="flex-1 bg-black text-white py-2 rounded-sm font-semibold"
-              >
-                Add
-              </button>
-              <button
-                onClick={resetForm}
-                className="flex-1 bg-white border-2 border-black text-black py-2 rounded-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

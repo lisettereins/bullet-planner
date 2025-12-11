@@ -50,10 +50,10 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
   };
 
   return (
-    <table className="border-collapse p-4 border-2 border-black rounded-sm table-auto">
+    <table className=" border p-4 rounded-sm shadow table-auto">
       <thead>
         <tr>
-          <th className="relative border border-black bg-gray-100">
+          <th className="relative border rounded-sm bg-gray-50">
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="absolute bottom-1 left-1 text-xs font-semibold">
                 Habits
@@ -66,7 +66,7 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
           {daysOfWeek.map((day) => (
             <th
               key={day}
-              className="border border-black text-center p-1 bg-gray-100 text-xs"
+              className="p-4 border rounded-sm bg-gray-50 text-s"
             >
               {day}
             </th>
@@ -76,7 +76,7 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
       <tbody>
         {habits?.map((habit) => (
           <tr key={habit.id}>
-            <td className="border border-black px-3 py-2 bg-gray-0 font-medium whitespace-nowrap">
+            <td className="border rounded-sm px-3 py-2 bg-gray-50 font-medium text-lg whitespace-nowrap">
               {habit.name}
             </td>
             {week.map((day) => {
@@ -89,7 +89,10 @@ export default function HabitTracker({ habits, habit_logs }: HabitItemProps) {
               return (
                 <td
                   key={habit.id + day}
-                  className="border border-black h-10 p-0 text-center"
+                  className={`border rounded-sm h-10 p-0 text-center ${
+              done ? 'opacity-60 bg-gray-50' : 'bg-white'
+            }`}
+                  
                 >
                   <button
                     className="w-full h-full flex items-center justify-center text-lg"
